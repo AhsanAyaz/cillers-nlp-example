@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import { runOpenAi } from './api/openai';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -12,9 +13,10 @@ const root = ReactDOM.createRoot(
  * Cookies and csrf tokens can become set in the wrong order. 
 */
 root.render(
-    <>
-        <App />
-    </>
+  <>
+    <App />
+  </>
 );
 
 reportWebVitals();
+runOpenAi()

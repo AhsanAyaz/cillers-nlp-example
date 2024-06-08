@@ -3,3 +3,5 @@ __pycache__
 **/*.pyc
 .polytope
 .DS_Store
+.env.*
+.env
