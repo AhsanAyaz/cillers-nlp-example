@@ -6,6 +6,7 @@ export type ZubaanLanguage = {
 // Create an array of popular human languages with their names and ISO 639-1 codes
 export const LANGUAGES: ZubaanLanguage[] = [
   { name: "English", code: "en" },
+  { name: "Swedish", code: "sv" },
   { name: "Spanish", code: "es" },
   { name: "Mandarin Chinese", code: "zh" },
   { name: "Hindi", code: "hi" },

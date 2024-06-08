@@ -3,6 +3,7 @@ import { GET_PRODUCTS, ADD_PRODUCT, REMOVE_PRODUCT, PRODUCT_ADDED_SUBSCRIPTION }
 import { useQuery, useMutation } from '@apollo/client';
 import { LANGUAGES, ZubaanLanguage } from '../utils/languages';
 import LanguagePicker from './LanguagePicker';
+import { runOpenAi } from '../api/openai';
 
 interface Product {
   id: string;
@@ -11,6 +12,11 @@ interface Product {
 
 interface GetProductsQuery {
   products: Product[];
+}
+
+type Message = {
+  text: string;
+  by: 'me' | 'ai';
 }
 
 
@@ -23,6 +29,8 @@ const Chat = () => {
   const { data, loading, error, subscribeToMore } = useQuery(GET_PRODUCTS);
   const [addProduct] = useMutation(ADD_PRODUCT, { errorPolicy: "all" });
   const [removeProduct] = useMutation(REMOVE_PRODUCT);
+
+  const [messages, setMessages] = useState<Message[]>([]);
 
   useEffect(() => {
     subscribeToMore({
@@ -58,7 +66,7 @@ const Chat = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ sourceLanguage, targetLanguage, prompt, id: 'me'  }),
+        body: JSON.stringify({ sourceLanguage, targetLanguage, prompt, id: 'me' }),
       });
       if (response.ok) {
         setNewProductText('');
@@ -67,7 +75,7 @@ const Chat = () => {
         console.error('Failed to add product:', errorText);
       }
     } else {
-      await addProduct({ variables: { sourceLanguage, targetLanguage, prompt, id: 'me'  } });
+      await addProduct({ variables: { sourceLanguage, targetLanguage, prompt, id: 'me' } });
       setNewProductText('');
     }
   };
@@ -88,30 +96,54 @@ const Chat = () => {
       },
     });
   };
+
+  const sendMessage = async () => {
+    setMessages((messages) => {
+      return [...messages, {
+        text: prompt,
+        by: 'me'
+      }]
+    })
+    const resp = await runOpenAi(sourceLanguage.name, targetLanguage.name, prompt);
+    console.log({ resp })
+    setMessages((messages) => {
+      return [...messages, {
+        text: resp[0].message.content!,
+        by: 'ai'
+      }]
+    })
+  }
   return (
     <form className='flex flex-col gap-4 py-10' style={{
       height: '100%',
       minHeight: '100%',
       flex: 1
     }} onSubmit={((ev) => {
-        ev.preventDefault();
-        handleAddProduct()
+      ev.preventDefault();
+      sendMessage();
     })}>
       <div className='flex flex-col gap-4'>
-        <LanguagePicker onChange={(lang: ZubaanLanguage) => {
+        <LanguagePicker defaultLang={LANGUAGES[0]} label={'Source Language'} onChange={(lang: ZubaanLanguage) => {
           setSourceLanguage(lang);
         }} />
-        <LanguagePicker onChange={(lang: ZubaanLanguage) => {
+        <LanguagePicker defaultLang={LANGUAGES[1]} label={'Target Language'} onChange={(lang: ZubaanLanguage) => {
           setTargetLanguage(lang);
         }} />
       </div>
       <div className='flex-1'>
-        <div className="chat chat-start">
-          <div className="chat-bubble">It's over Anakin, <br />I have the high ground.</div>
-        </div>
-        <div className="chat chat-end">
-          <div className="chat-bubble">You underestimate my power!</div>
-        </div>
+        {
+          messages.map(message => {
+            if (message.by === 'me') {
+              return <div className="chat chat-end">
+                <div className="chat-bubble chat-bubble-accent">{message.text}</div>
+              </div>
+            } else {
+              return <div className="chat chat-start">
+                <div className="chat-bubble chat-bubble-primary">{message.text}</div>
+              </div>
+            }
+          })
+        }
       </div>
       <textarea onChange={(ev) => {
         setPrompt(ev.target.value);

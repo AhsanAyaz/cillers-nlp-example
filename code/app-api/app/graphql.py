@@ -10,21 +10,10 @@ from strawberry.exceptions import StrawberryGraphQLError
 from strawberry.types import Info as _Info
 from strawberry.types.info import RootValueType
 import logging
+
 from . import auth, db
-import os
-import openai
-from dotenv import load_dotenv
-
-
-load_dotenv()
-
 
 logger = logging.getLogger(__name__)
-
-client = openai.OpenAI(
-    api_key=os.environ.get("OPENAI_API_KEY")
-)
-
 
 #### Context ####
 
@@ -56,33 +45,6 @@ class IsAuthenticated(BasePermission):
 class Message:
     message: str
 
-#### Queries ####
-
-@strawberry.type
-class Query:
-    @strawberry.field
-    def products(self) -> list[db.Product]:
-        return db.list_products()
-
-    @strawberry.field(permission_classes=[IsAuthenticated])
-    def hello(self) -> Message:
-        return Message(message="Hej, hej")
-
-    @strawberry.field(permission_classes=[IsAuthenticated])
-    def translate(self, info: Info, text: str, target_language: str) -> Message:
-        prompt = f"Translate the following text to {target_language}:\n\n{text}"
-        
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "You are a translator."},
-                {"role": "user", "content": prompt}
-            ]
-        )
-        
-        translated_text = response.choices[0].message['content'].strip()
-        return Message(message=translated_text)
-
 #### Mutations ####
 
 @strawberry.type
@@ -94,6 +56,18 @@ class Mutation:
     @strawberry.field(permission_classes=[IsAuthenticated])
     async def remove_product(self, id: str) -> None:
         db.delete_product(id)
+
+#### Queries ####
+
+@strawberry.type
+class Query:
+    @strawberry.field
+    def products(self) -> list[db.Product]:
+        return db.list_products()
+
+    @strawberry.field(permission_classes=[IsAuthenticated])
+    def hello(self) -> Message:
+        return Message(message="Hej, hej")
 
 #### Subscriptions ####
 
@@ -108,7 +82,7 @@ class Subscription:
                 print("Token has expired")
                 await info.context.request.close(code=4403, reason="token_expired")
                 break
-
+            
             for p in db.list_products():
                 if p.id not in seen:
                     seen.add(p.id)
