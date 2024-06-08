@@ -1,6 +1,6 @@
 import unittest
 import json
-from openai_test import app  
+from openai_test import app  # Ensure this import points to your Flask app
 
 class APITestCase(unittest.TestCase):
     def setUp(self):
@@ -9,10 +9,9 @@ class APITestCase(unittest.TestCase):
         self.app.testing = True
 
     def test_get_response(self):
+        prompt = "Translate this sentence 'Compose a poem that explains the concept of recursion in programming.' to Swedish."
         
-        prompt = "Compose a poem that explains the concept of recursion in programming."
-        
-        #POST request with prompt
+        # POST request with prompt
         response = self.app.post('/get-response', 
                                  data=json.dumps({'prompt': prompt}),
                                  content_type='application/json')
@@ -31,6 +30,9 @@ class APITestCase(unittest.TestCase):
         
         # Print the response content
         print('Response:', response_data['response'])
+
+        # Additional assertion for specific expected content if needed
+        self.assertIn('rekursion', response_data['response'])
 
     def test_no_prompt(self):
         # Make a POST request without a prompt to the /get-response endpoint
@@ -52,6 +54,9 @@ class APITestCase(unittest.TestCase):
         
         # Print the error content
         print('Error:', response_data['error'])
+
+        # Additional assertion for the type of error if needed
+        self.assertEqual(response_data['error'], 'No prompt provided')
 
 if __name__ == '__main__':
     unittest.main()
