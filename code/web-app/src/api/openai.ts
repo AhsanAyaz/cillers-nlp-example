@@ -16,3 +16,16 @@ export async function runOpenAi(sourceLanguage: string, targetLang: string, prom
   });
   return completion.choices
 }
+
+
+export async function summarizeConversation(sourceLanguage: string, targetLang: string, prompt: string) {
+  const finalPrompt = `Convert the following JSON array containing the conversation into source and target language's summary ${targetLang} from ${sourceLanguage}: ${prompt}`
+  const completion = await openai.chat.completions.create({
+    messages: [
+      { "role": "system", "content": "You are a translator." },
+      { "role": "user", "content": finalPrompt }
+    ],
+    model: 'gpt-3.5-turbo',
+  });
+  return completion.choices
+}

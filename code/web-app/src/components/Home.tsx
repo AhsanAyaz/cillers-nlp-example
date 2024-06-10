@@ -19,7 +19,7 @@ const Home: React.FC<AuthenticatedProps> = ({ userInfo, logout, csrf }) => {
   return (
     <ApolloProvider client={create_api_client(csrf, on_graphql_error)}>
       <Header logout={logout} />
-      <main className='min-h-[calc(100vh - 68px)] max-w-3xl mx-auto' style={{
+      <main className='min-h-[calc(100vh - 68px)] max-w-md md:max-w-xl mx-auto' style={{
         minHeight: 'calc(100vh - 68px)',
         display: 'flex',
         flexDirection: 'column',
